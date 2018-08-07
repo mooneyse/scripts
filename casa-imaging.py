@@ -71,6 +71,24 @@ tclean(                                  # do the cleaning
     interactive = True,                  #
     savemodel   = 'modelcolumn')         # model is required for later self-calibration steps
 
+tclean(                                  # do the cleaning
+    vis         = '/data5/sean/hba/runs13/data/concatenate-110.ms',               # two rounds of cleaning done
+    imagename   = '3c273-1',           #
+    specmode    = 'mfs',                 # multifrequency synthesis mode
+    deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
+    nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
+    gridder     = 'standard',            #
+    imsize      = [899, 899],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines
+    cell        = ['0.0393arcsec'],              #
+    weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
+    robust      = -2.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
+    threshold   = '0mJy',                # stops when max residual in tclean region < threshold
+    niter       = 5000,                  #
+    pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
+    interactive = True,                  #
+    savemodel   = 'modelcolumn')         # model is required for later self-calibration steps
+
+
 imview(                                  # view the cleaned image
     raster      = '3C273-l-1.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
 
