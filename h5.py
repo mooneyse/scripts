@@ -32,11 +32,11 @@ for station in range(len(clock_data.ant[:])): # 0 to 67 inclusive
 
     plt.figure(figsize = (10, 8))
     plt.xlabel('Time')
-    plt.ylabel('Clock (ns)')    
+    plt.ylabel('Clock (ns)')
     plt.title('Station ' + str(station_list[station]))
 
     for polarisation in range(polarisation_range):
-    
+
         clocks = []
         for clock in range(843):
             clocks.append(clock_data.val[clock, station, polarisation] * 1e9) # change to nanoseconds
@@ -58,8 +58,8 @@ for station in range(len(clock_data.ant[:])): # 0 to 67 inclusive
         plt.xlim(0, len(clocks))
         colors = 'blue' if polarisation == 0 else 'red'
         labels = 'Polarisation ' + str(polarisation + 1)
-        plt.plot(clocks, lw = 0.5, color = colors, label = labels) 
+        plt.plot(clocks, lw = 0.5, color = colors, label = labels)
         if both_polarisations:
             plt.legend()
-        
+
     plt.show()
