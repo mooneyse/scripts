@@ -53,9 +53,25 @@ imsize           = round(image_x_and_y / cell) # calculate image size (high reso
 # it'll be easier to make 2 images using uv cuts, 1 high and 1 low resolution
 # then feather them together like in Varenius+ (2015)
 
+# exportuvfits.last
+taskname           = "exportuvfits"
+vis                =  "/data5/sean/hba/run3/imaging/ms3-fill-missing-data.ms/"
+fitsfile           =  "/data5/sean/hba/run3/imaging/ms3-fill-missing-data.fits"
+datacolumn         =  "data"
+field              =  ""
+spw                =  ""
+antenna            =  ""
+timerange          =  ""
+writesyscal        =  False
+multisource        =  False
+combinespw         =  True
+writestation       =  True
+padwithflags       =  True
+overwrite          =  False
+
 tclean(                                  # do the cleaning
-    vis         = 'ms.ms',               # two rounds of cleaning done
-    imagename   = '3C273-l-1',           #
+    vis         = '/data5/sean/hba/run1/imaging/ms1-110-datacol.ms', # two rounds of cleaning done
+    imagename   = '3c273-test',           #
     uvrange     = '0~200klambda',        # low resolution image
     specmode    = 'mfs',                 # multifrequency synthesis mode
     deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
@@ -68,7 +84,7 @@ tclean(                                  # do the cleaning
     threshold   = '0mJy',                # stops when max residual in tclean region < threshold
     niter       = 5000,                  #
     pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
-    interactive = True,                  #
+    interactive = True)#,                  #
     savemodel   = 'modelcolumn')         # model is required for later self-calibration steps
 
 tclean(                                  # do the cleaning
