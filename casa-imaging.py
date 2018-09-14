@@ -16,7 +16,7 @@ from astropy.io import fits
 
 ''' prepare the data ------------------------------------------------------- '''
 
-# the last step in the long-baseline pipeline parset wrote to the CORRECTED_DATA column
+# the last step in the long-baseline pipeline parset wrote to the corrected_data column
 
 os.system('cp -r output/long-baseline/L* imaging/data/')                   # copy in case things go wrong
 os.system('msoverview in=L606014_SB028_uv.ndppp_prep_target verbose=True') # find the time and frequency averaging
@@ -41,7 +41,22 @@ cell             = resolution / 7              # calculate cell size (high resol
 
 image_diagonal   = 50                          # arcseconds
 image_x_and_y    = image_diagonal / np.sqrt(2) # 35.3553 arcseconds
-imsize           = round(image_x_and_y / cell) # calculate image size (high resolution is 899 pixels, low resolution is 240 pixels)
+imsize           = round(image_x_and_y / cell) # calculate image size (high resolution is 899 - i.e., 900 - pixels, low resolution is 240 pixels)
+
+exportuvfits(
+    vis          =  'ms3-fill-missing-data.ms',   # if it is to be taken into aips (directory: /data5/sean/hba/run3/imaging/)
+    fitsfile     =  'ms3-fill-missing-data.fits',
+    datacolumn   =  'data',                       # note - not corrected data
+    field        =  '',
+    spw          =  '',
+    antenna      =  '',
+    timerange    =  '',
+    writesyscal  =  False,
+    multisource  =  False,
+    combinespw   =  True,
+    writestation =  True,
+    padwithflags =  True,
+    overwrite    =  False)
 
 ''' self-calibration round 1 ----------------------------------------------- '''
 
@@ -51,64 +66,60 @@ imsize           = round(image_x_and_y / cell) # calculate image size (high reso
 
 # try uniform weighting and appropriate uv cuts without multiscale first
 # it'll be easier to make 2 images using uv cuts, 1 high and 1 low resolution
-# then feather them together like in Varenius+ (2015)
+# then feather them together like in varenius+ (2015)
 
-# exportuvfits.last
-taskname           = "exportuvfits"
-vis                =  "/data5/sean/hba/run3/imaging/ms3-fill-missing-data.ms/"
-fitsfile           =  "/data5/sean/hba/run3/imaging/ms3-fill-missing-data.fits"
-datacolumn         =  "data"
-field              =  ""
-spw                =  ""
-antenna            =  ""
-timerange          =  ""
-writesyscal        =  False
-multisource        =  False
-combinespw         =  True
-writestation       =  True
-padwithflags       =  True
-overwrite          =  False
+# when the data outputted from the lb pipeline were concatenated, the corrected data were copied to the data column
 
 tclean(                                  # do the cleaning
-    vis         = '/data5/sean/hba/run1/imaging/ms1-110-datacol.ms', # two rounds of cleaning done
-    imagename   = '3c273-test',           #
+    vis         = 'ms.ms',               # changed name I think as was too long a string for AIPS
+    imagename   = '3c273-run3-lowres',   #
     uvrange     = '0~200klambda',        # low resolution image
     specmode    = 'mfs',                 # multifrequency synthesis mode
     deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
     nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
     gridder     = 'standard',            #
-    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines
-    cell        = [0.1473],              #
+    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.1473arcsec'],      # 0.0393arcsec for high res
     weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
     robust      = -1.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
     threshold   = '0mJy',                # stops when max residual in tclean region < threshold
     niter       = 5000,                  #
     pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
-    interactive = True)#,                  #
-    savemodel   = 'modelcolumn')         # model is required for later self-calibration steps
-
-tclean(                                  # do the cleaning
-    vis         = '/data5/sean/hba/runs13/data/concatenate-110.ms',               # two rounds of cleaning done
-    imagename   = '3c273-1',           #
-    specmode    = 'mfs',                 # multifrequency synthesis mode
-    deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
-    nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
-    gridder     = 'standard',            #
-    imsize      = [899, 899],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines
-    cell        = ['0.0393arcsec'],              #
-    weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
-    robust      = -2.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
-    threshold   = '0mJy',                # stops when max residual in tclean region < threshold
-    niter       = 5000,                  #
-    pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
     interactive = True,                  #
-    savemodel   = 'modelcolumn')         # model is required for later self-calibration steps
+    savemodel   = 'modelcolumn')
 
+# placed two clean boxes, one around the core and one around the jet - then clicked the green arrow circle
+# did not place any new boxes and then clicked the red x
 
-imview(                                  # view the cleaned image
-    raster      = '3C273-l-1.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
+# see https://casa.nrao.edu/casadocs-devel/stable/global-task-list/task_imstat/about for column explanation
+# {'blc': array([0, 0, 0, 0], dtype=int32),
+#  'blcf': '12:29:07.879, +02.02.51.024, I, 1.544e+08Hz',
+#  'flux': array([ 3.14327833]),
+#  'max': array([ 1.80774069]),
+#  'maxpos': array([202,  32,   0,   0], dtype=int32),
+#  'maxposf': '12:29:05.894, +02.02.55.738, I, 1.544e+08Hz',
+#  'mean': array([ 0.00145247]),
+#  'medabsdevmed': array([ 0.06836495]),
+#  'median': array([-0.00014482]),
+#  'min': array([-0.51338387]),
+#  'minpos': array([200,  11,   0,   0], dtype=int32),
+#  'minposf': '12:29:05.914, +02.02.52.644, I, 1.544e+08Hz',
+#  'npts': array([ 57600.]),
+#  'q1': array([-0.06885381]),
+#  'q3': array([ 0.06783679]),
+#  'quartile': array([ 0.1366906]),
+#  'rms': array([ 0.10373937]),
+#  'sigma': array([ 0.1037301]),
+#  'sum': array([ 83.66239431]),
+#  'sumsq': array([ 619.88296805]),
+#  'trc': array([239, 239,   0,   0], dtype=int32),
+#  'trcf': '12:29:05.531, +02.03.26.229, I, 1.544e+08Hz'}
 
-# I can see the jet head which I cleaned but the source isn't there!
+imview(                                          # view the cleaned image
+    raster      = '3c273-run3-lowres.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
+
+imstat(
+    imagename   = '3c273-run3-lowres.image.tt0')
 
 gaincal(                                 # determine temporal gains
     vis         = 'ms.ms',               # my measurement set
@@ -134,35 +145,54 @@ applycal(                                # apply the calibration to the data for
     vis         = 'ms.ms',               #
     gaintable   = ['caltable-l-1'])      #
 
-# had interp = 'linearperobs' but only 1 observation so it ignored this interpolation.
-
 ''' self-calibration round 2 ----------------------------------------------- '''
 
 tclean(                                  # do the cleaning
-    vis         = 'ms.ms',               # two rounds of cleaning done
-    imagename   = '3C273-l-2',           #
+    vis         = 'ms.ms',               # changed name I think as was too long a string for AIPS
+    imagename   = '3c273-run3-lowres-2', #
     uvrange     = '0~200klambda',        # low resolution image
     specmode    = 'mfs',                 # multifrequency synthesis mode
     deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
     nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
     gridder     = 'standard',            #
-    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines
-    cell        = [0.1473],              #
+    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.1473arcsec'],      # 0.0393arcsec for high res
     weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
     robust      = -1.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
     threshold   = '0mJy',                # stops when max residual in tclean region < threshold
     niter       = 5000,                  #
     pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
     interactive = True,                  #
-    savemodel   = 'modelcolumn')         # model is required for later self-calibration steps
+    savemodel   = 'modelcolumn')
 
-# did one round then exited without placing any boxes because I had to leave
-# picked it up again the next day and did two rounds, placing boxes
+imview(                                            # view the cleaned image
+    raster      = '3c273-run3-lowres-2.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
 
-imview(                                  # view the cleaned image
-    raster      = '3C273-l-2.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
+imstat(
+    imagename   = '3c273-run3-lowres-2.image.tt0')
 
-# I can see the jet head which I cleaned but the source isn't there!
+# {'blc': array([0, 0, 0, 0], dtype=int32),
+#  'blcf': '12:29:07.879, +02.02.51.024, I, 1.544e+08Hz',
+#  'flux': array([-85.11868151]),
+#  'max': array([ 1.09920049]),
+#  'maxpos': array([202,  32,   0,   0], dtype=int32),
+#  'maxposf': '12:29:05.894, +02.02.55.738, I, 1.544e+08Hz',
+#  'mean': array([-0.04013596]),
+#  'medabsdevmed': array([ 0.0311427]),
+#  'median': array([-0.04206826]),
+#  'min': array([-0.33108622]),
+#  'minpos': array([202,  50,   0,   0], dtype=int32),
+#  'minposf': '12:29:05.894, +02.02.58.389, I, 1.544e+08Hz',
+#  'npts': array([ 57600.]),
+#  'q1': array([-0.07241488]),
+#  'q3': array([-0.01005821]),
+#  'quartile': array([ 0.06235667]),
+#  'rms': array([ 0.06646583]),
+#  'sigma': array([ 0.05297981]),
+#  'sum': array([-2311.83126209]),
+#  'sumsq': array([ 254.45991607]),
+#  'trc': array([239, 239,   0,   0], dtype=int32),
+#  'trcf': '12:29:05.531, +02.03.26.229, I, 1.544e+08Hz'}
 
 gaincal(                                 # determine temporal gains
     vis         = 'ms.ms',               # my measurement set
@@ -190,26 +220,31 @@ applycal(                                # apply the calibration to the data for
 
 ''' self-calibration round 3 ----------------------------------------------- '''
 
+# NOTE here, 22:00 13-09-2018
+
 tclean(                                  # do the cleaning
-    vis         = 'ms.ms',               # two rounds of cleaning done
-    imagename   = '3C273-l-3',           #
+    vis         = 'ms.ms',               # changed name I think as was too long a string for AIPS
+    imagename   = '3c273-run3-lowres-3', #
     uvrange     = '0~200klambda',        # low resolution image
     specmode    = 'mfs',                 # multifrequency synthesis mode
     deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
     nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
     gridder     = 'standard',            #
-    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines
-    cell        = [0.1473],              #
+    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.1473arcsec'],      # 0.0393arcsec for high res
     weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
     robust      = -1.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
     threshold   = '0mJy',                # stops when max residual in tclean region < threshold
     niter       = 5000,                  #
     pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
     interactive = True,                  #
-    savemodel   = 'modelcolumn')         # model is required for later self-calibration steps
+    savemodel   = 'modelcolumn')
 
-imview(                                  # view the cleaned image
-    raster      = '3C273-l-3.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
+imview(                                            # view the cleaned image
+    raster      = '3c273-run3-lowres-3.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
+
+imstat(
+    imagename   = '3c273-run3-lowres-3.image.tt0')
 
 # compare previous image with this phase-only self-calibration image
 # compare S/N = (peak Jy/beam)/(rms Jy/beam)
@@ -239,25 +274,25 @@ applycal(                                # apply the calibration to the data for
 ''' self-calibration round 4 ----------------------------------------------- '''
 
 tclean(                                  # do the cleaning
-    vis         = 'ms.ms',               # two rounds of cleaning done
-    imagename   = '3C273-l-4',           #
+    vis         = 'ms.ms',               # changed name I think as was too long a string for AIPS
+    imagename   = '3c273-run3-lowres-4', #
     uvrange     = '0~200klambda',        # low resolution image
     specmode    = 'mfs',                 # multifrequency synthesis mode
     deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
     nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
     gridder     = 'standard',            #
-    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines
-    cell        = [0.1473],              #
+    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.1473arcsec'],      # 0.0393arcsec for high res
     weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
     robust      = -1.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
     threshold   = '0mJy',                # stops when max residual in tclean region < threshold
     niter       = 5000,                  #
     pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
     interactive = True,                  #
-    savemodel   = 'modelcolumn')         # model is required for later self-calibration steps
+    savemodel   = 'modelcolumn')
 
-imview(                                  # view the cleaned image
-    raster      = '3C273-l-4.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
+imview(                                            # view the cleaned image
+    raster      = '3c273-run3-lowres-4.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
 
 gaincal(                                 # determine temporal gains
     vis         = 'ms.ms',               # my measurement set
@@ -294,37 +329,36 @@ plotms(                                  # look at the uv coverage
 # make sure the model is good match to data
 # confirm that flux has not decreased significantly after applying solutions
 
-''' > here '''
-
 tclean(                                  # do the cleaning
-    vis         = 'ms.ms',               #
-    imagename   = '3C273-l-5',           #
+    vis         = 'ms.ms',               # changed name I think as was too long a string for AIPS
+    imagename   = '3c273-run3-lowres-5', #
     uvrange     = '0~200klambda',        # low resolution image
     specmode    = 'mfs',                 # multifrequency synthesis mode
     deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
     nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
     gridder     = 'standard',            #
-    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines
-    cell        = [0.1473],              #
+    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.1473arcsec'],      # 0.0393arcsec for high res
     weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
     robust      = -1.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
     threshold   = '0mJy',                # stops when max residual in tclean region < threshold
     niter       = 5000,                  #
     pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
-    interactive = True)                  #
+    interactive = True,                  #
+    savemodel   = 'modelcolumn')
 
-imview(                                  # view the cleaned image
-    raster      = '3C273-l-5.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
+imview(                                            # view the cleaned image
+    raster      = '3c273-run3-lowres-5.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
 
 # compare previous image with this amplitude self-calibration image
 # compare S/N = (peak Jy/beam)/(rms Jy/beam)
 
 ''' export from CASA ------------------------------------------------------- '''
 
-exportfits(                              # casa images can be exported as fits files
-    imagename = '3C273-l-5.image.tt0',   #
-    fitsimage = '3C273-l.fits')          #
+exportfits(                                        # casa images can be exported as fits files
+    imagename = '3c273-run3-lowres-5.image.tt0',   #
+    fitsimage = '3C273-l.fits')                    #
 
 ''' use APLpy to make it of publication quality ---------------------------- '''
 
-# use Astropy for contours
+# use astropy for contours
