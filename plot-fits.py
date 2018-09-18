@@ -6,6 +6,10 @@
     Detail: Plots a fits file image.
 '''
 
+# complains that no module 'pyqt4' installed so added these lines as a work around
+import matplotlib as mpl
+mpl.use('Agg') 
+
 import aplpy, os, sys
 import matplotlib.pyplot as plt
 

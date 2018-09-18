@@ -220,8 +220,6 @@ applycal(                                # apply the calibration to the data for
 
 ''' self-calibration round 3 ----------------------------------------------- '''
 
-# NOTE here, 22:00 13-09-2018
-
 tclean(                                  # do the cleaning
     vis         = 'ms.ms',               # changed name I think as was too long a string for AIPS
     imagename   = '3c273-run3-lowres-3', #
@@ -245,6 +243,29 @@ imview(                                            # view the cleaned image
 
 imstat(
     imagename   = '3c273-run3-lowres-3.image.tt0')
+
+# {'blc': array([0, 0, 0, 0], dtype=int32),
+#  'blcf': '12:29:07.879, +02.02.51.024, I, 1.544e+08Hz',
+#  'flux': array([-77.91278479]),
+#  'max': array([ 1.41481519]),
+#  'maxpos': array([202,  32,   0,   0], dtype=int32),
+#  'maxposf': '12:29:05.894, +02.02.55.738, I, 1.544e+08Hz',
+#  'mean': array([-0.03687202]),
+#  'medabsdevmed': array([ 0.03006466]),
+#  'median': array([-0.03980701]),
+#  'min': array([-0.50950491]),
+#  'minpos': array([199,  17,   0,   0], dtype=int32),
+#  'minposf': '12:29:05.924, +02.02.53.528, I, 1.544e+08Hz',
+#  'npts': array([ 57600.]),
+#  'q1': array([-0.06885893]),
+#  'q3': array([-0.00853507]),
+#  'quartile': array([ 0.06032386]),
+#  'rms': array([ 0.0684131]),
+#  'sigma': array([ 0.05762694]),
+#  'sum': array([-2123.82828518]),
+#  'sumsq': array([ 269.58831972]),
+#  'trc': array([239, 239,   0,   0], dtype=int32),
+#  'trcf': '12:29:05.531, +02.03.26.229, I, 1.544e+08Hz'}
 
 # compare previous image with this phase-only self-calibration image
 # compare S/N = (peak Jy/beam)/(rms Jy/beam)
@@ -270,6 +291,8 @@ plotcal(                                 # do the phases appear smoothly varying
 applycal(                                # apply the calibration to the data for next round of imaging
     vis         = 'ms.ms',               #
     gaintable   = ['caltable-l-3'])      #
+
+# NOTE here 00:18 18:09:2018
 
 ''' self-calibration round 4 ----------------------------------------------- '''
 
