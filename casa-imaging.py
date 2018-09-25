@@ -292,9 +292,26 @@ applycal(                                # apply the calibration to the data for
     vis         = 'ms.ms',               #
     gaintable   = ['caltable-l-3'])      #
 
-# NOTE here 00:18 18:09:2018
-
 ''' self-calibration round 4 ----------------------------------------------- '''
+
+# plotms(
+#     vis = 'ms.ms',
+#     xaxis = 'time', # 'frequency'
+#     yaxis = 'amplitude', # 'phase'
+#     ydatacolumn = 'corrected',
+#     antenna = '*&',
+#     correlation = 'XX',
+#     plotfile='test.png',
+#     expformat 'png',
+#     exprange = 'all',
+#     overwrite = 'True',
+#     showgui = 'False',
+#     iteraxis = 'antenna',
+#     customflaggedsymbol = True,
+#     flaggedsymbolshape = 'circle',
+#     flaggedsymbolsize = 5,
+#     flaggedsymbolcolor = 'ff0000',
+#     flaggedsymbolfill = 'fill')
 
 tclean(                                  # do the cleaning
     vis         = 'ms.ms',               # changed name I think as was too long a string for AIPS
@@ -342,10 +359,25 @@ applycal(                                # apply the calibration to the data for
 
 ''' evaluate the calibration ----------------------------------------------- '''
 
-plotms(                                  # look at the uv coverage
-    vis         = 'ms.ms',               #
-    xaxis       = 'uvwave',              #
-    yaxis       = 'amplitude')           #
+plotms(                                          # look at the uv coverage
+    vis                 = 'ms.ms',               #
+    xaxis               = 'uvwave',              #
+    yaxis               = 'amplitude' ,          #
+    antenna             = '*&',
+    correlation         = 'XX',
+    plotfile            = 'test.png',
+    expformat           = 'png',
+    exprange            = 'all',
+    overwrite           = 'True',
+    showgui             = 'False',
+    iteraxis            = 'antenna',
+    customflaggedsymbol = True,
+    flaggedsymbolshape  = 'circle',
+    flaggedsymbolsize   = 5,
+    flaggedsymbolcolor  = 'ff0000',
+    flaggedsymbolfill   = 'fill')
+
+# NOTE here 12:04 18-09-2018
 
 # inspect the uv plot of corrected data to check for any new outliers
 # if there are some, flag them and go back to before the amplitude calibration cycle
@@ -376,7 +408,7 @@ imview(                                            # view the cleaned image
 # compare previous image with this amplitude self-calibration image
 # compare S/N = (peak Jy/beam)/(rms Jy/beam)
 
-''' export from CASA ------------------------------------------------------- '''
+''' export from casa ------------------------------------------------------- '''
 
 exportfits(                                        # casa images can be exported as fits files
     imagename = '3c273-run3-lowres-5.image.tt0',   #
