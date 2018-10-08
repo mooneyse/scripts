@@ -1,6 +1,9 @@
 #!/usr/bin/env python
+
+# default option isn't working
 import matplotlib as mpl
 mpl.use('Agg')
+
 import numpy as np
 import matplotlib.pyplot as plt
 import losoto.h5parm as lh5
