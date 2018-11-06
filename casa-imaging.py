@@ -68,26 +68,29 @@ exportuvfits(
 # it'll be easier to make 2 images using uv cuts, 1 high and 1 low resolution
 # then feather them together like in varenius+ (2015)
 
+# clean I ran with Lean in Leiden at the SKSP meeting
+#clean(vis="/data5/sean/hba/run3/imaging/ms.ms",imagename="3c273-run3-lowres",outlierfile="",field="",spw="0:10~60",selectdata=True,timerange="",uvrange=">80klambda",antenna="",scan="",observation="",intent="",mode="mfs",resmooth=False,gridmode="",wprojplanes=-1,facets=1,cfcache="cfcache.dir",rotpainc=5.0,painc=360.0,aterm=True,psterm=False,mterm=True,wbawp=False,conjbeams=True,epjtable="",interpolation="linear",niter=5000,gain=0.1,threshold="0mJy",psfmode="clark",imagermode="csclean",ftmachine="mosaic",mosweight=False,scaletype="SAULT",multiscale=[0],negcomponent=-1,smallscalebias=0.6,interactive=True,mask=[],nchan=-1,start=0,width=1,outframe="",veltype="radio",imsize=[240, 240],cell=['0.04arcsec'],phasecenter="",restfreq="",stokes="I",weighting="briggs",robust=-2.0,uvtaper=False,outertaper=[''],innertaper=['1.0'],modelimage="",restoringbeam=[''],pbcor=True,minpb=0.2,usescratch=False,noise="1.0Jy",npixels=0,npercycle=10,cyclefactor=1.5,cyclespeedup=-1,nterms=1,reffreq="",chaniter=False,flatnoise=True,allowchunk=False)
+
 # when the data outputted from the lb pipeline were concatenated, the corrected data were copied to the data column
 
 tclean(                                  # do the cleaning
-    vis         = 'ms.ms',               # changed name I think as was too long a string for AIPS
+    vis         = 'nov-again.ms',        # changed name I think as was too long a string for AIPS
     imagename   = '3c273-run3-lowres',   #
-    uvrange     = '0~200klambda',        # low resolution image
+    #uvrange     = '0~200klambda',        # low resolution image - would've made an >80k lambda cut but the CS are tied
     specmode    = 'mfs',                 # multifrequency synthesis mode
     deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
     nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
     gridder     = 'standard',            #
-    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
-    cell        = ['0.1473arcsec'],      # 0.0393arcsec for high res
+    imsize      = [2000, 2000],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.0393arcsec'],      # 0.0393arcsec for high res
     weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
-    robust      = -1.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
-    threshold   = '0mJy',                # stops when max residual in tclean region < threshold
+    robust      = -2.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
+    threshold   = '10mJy',                # stops when max residual in tclean region < threshold
     niter       = 5000,                  #
     pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
     interactive = True,                  #
     savemodel   = 'modelcolumn')
-
+'''NOV here placed one clean box on the jet head. 10 max cycleniter, 0.01jy threshold, cyclethreshold 0.420181'''
 # placed two clean boxes, one around the core and one around the jet - then clicked the green arrow circle
 # did not place any new boxes and then clicked the red x
 
@@ -121,17 +124,41 @@ imview(                                          # view the cleaned image
 imstat(
     imagename   = '3c273-run3-lowres.image.tt0')
 
+'''{'blc': array([0, 0, 0, 0], dtype=int32),
+ 'blcf': '12:29:07.880, +02.02.51.015, I, 1.50494e+08Hz',
+ 'flux': array([ 3.83063034]),
+ 'max': array([ 1.40856409]),
+ 'maxpos': array([759, 120,   0,   0], dtype=int32),
+ 'maxposf': '12:29:05.890, +02.02.55.731, I, 1.50494e+08Hz',
+ 'mean': array([ 0.00036116]),
+ 'medabsdevmed': array([ 0.0309557]),
+ 'median': array([  7.38790914e-05]),
+ 'min': array([-0.30088311]),
+ 'minpos': array([756, 253,   0,   0], dtype=int32),
+ 'minposf': '12:29:05.898, +02.03.00.958, I, 1.50494e+08Hz',
+ 'npts': array([ 810000.]),
+ 'q1': array([-0.03097994]),
+ 'q3': array([ 0.03092873]),
+ 'quartile': array([ 0.06190866]),
+ 'rms': array([ 0.04949074]),
+ 'sigma': array([ 0.04948945]),
+ 'sum': array([ 292.5413548]),
+ 'sumsq': array([ 1983.95997948]),
+ 'trc': array([899, 899,   0,   0], dtype=int32),
+ 'trcf': '12:29:05.523, +02.03.26.346, I, 1.50494e+08Hz'}
+'''
+
 gaincal(                                 # determine temporal gains
-    vis         = 'ms.ms',               # my measurement set
+    vis         = 'nov-small.ms',               # my measurement set
     caltable    = 'caltable-l-1',        # name for the calibration table generated
-    uvrange     = '0~200klambda',        # low resolution image
+    #uvrange     = '0~200klambda',        # low resolution image
     gaintype    = 'T',                   # average polarisations
     calmode     = 'p',                   # phase only
     combine     = 'spw',                 # average spectral windows - if source spectral index/morphology changes significantly across the band, do not combine spws, especially for amplitude
     solint      = '240s')                # want it to be short enough to track changes in the atmospheric phase with high accuracy but long enough to measure phases with good signal-to-noise
 
 # if there are lots of failed solutions on most antennas, go back and increase S/N of solution = more averaging of some kind
-# calibration solve statistics (spw - expected/attempted/succeeded): spw 0 - 60/60/60
+# calibration solve statistics (spw - expected/attempted/succeeded): spw 0 - 60/52/52
 
 plotcal(                                 # do the phases appear smoothly varying with time as opposed to noise-like?
     caltable    = 'caltable-l-1',        #
@@ -141,29 +168,32 @@ plotcal(                                 # do the phases appear smoothly varying
     subplot     = 421,                   #
     plotrange   = [0, 0, -180, 180])     #
 
+'''nov: flagged one point on PL station'''
+
 applycal(                                # apply the calibration to the data for next round of imaging
-    vis         = 'ms.ms',               #
+    vis         = 'nov-small.ms',               #
     gaintable   = ['caltable-l-1'])      #
 
 ''' self-calibration round 2 ----------------------------------------------- '''
 
 tclean(                                  # do the cleaning
-    vis         = 'ms.ms',               # changed name I think as was too long a string for AIPS
-    imagename   = '3c273-run3-lowres-2', #
-    uvrange     = '0~200klambda',        # low resolution image
+    vis         = 'nov-small.ms',        # changed name I think as was too long a string for AIPS
+    imagename   = '3c273-run3-lowres-2',   #
+    #uvrange     = '0~200klambda',        # low resolution image - would've made an >80k lambda cut but the CS are tied
     specmode    = 'mfs',                 # multifrequency synthesis mode
     deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
     nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
     gridder     = 'standard',            #
-    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
-    cell        = ['0.1473arcsec'],      # 0.0393arcsec for high res
+    imsize      = [900, 900],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.0393arcsec'],      # 0.0393arcsec for high res
     weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
-    robust      = -1.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
-    threshold   = '0mJy',                # stops when max residual in tclean region < threshold
+    robust      = -2.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
+    threshold   = '10mJy',                # stops when max residual in tclean region < threshold
     niter       = 5000,                  #
     pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
     interactive = True,                  #
     savemodel   = 'modelcolumn')
+
 
 imview(                                            # view the cleaned image
     raster      = '3c273-run3-lowres-2.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
@@ -171,37 +201,41 @@ imview(                                            # view the cleaned image
 imstat(
     imagename   = '3c273-run3-lowres-2.image.tt0')
 
-# {'blc': array([0, 0, 0, 0], dtype=int32),
-#  'blcf': '12:29:07.879, +02.02.51.024, I, 1.544e+08Hz',
-#  'flux': array([-85.11868151]),
-#  'max': array([ 1.09920049]),
-#  'maxpos': array([202,  32,   0,   0], dtype=int32),
-#  'maxposf': '12:29:05.894, +02.02.55.738, I, 1.544e+08Hz',
-#  'mean': array([-0.04013596]),
-#  'medabsdevmed': array([ 0.0311427]),
-#  'median': array([-0.04206826]),
-#  'min': array([-0.33108622]),
-#  'minpos': array([202,  50,   0,   0], dtype=int32),
-#  'minposf': '12:29:05.894, +02.02.58.389, I, 1.544e+08Hz',
-#  'npts': array([ 57600.]),
-#  'q1': array([-0.07241488]),
-#  'q3': array([-0.01005821]),
-#  'quartile': array([ 0.06235667]),
-#  'rms': array([ 0.06646583]),
-#  'sigma': array([ 0.05297981]),
-#  'sum': array([-2311.83126209]),
-#  'sumsq': array([ 254.45991607]),
-#  'trc': array([239, 239,   0,   0], dtype=int32),
-#  'trcf': '12:29:05.531, +02.03.26.229, I, 1.544e+08Hz'}
+'''
+{'blc': array([0, 0, 0, 0], dtype=int32),
+ 'blcf': '12:29:07.880, +02.02.51.015, I, 1.50494e+08Hz',
+ 'flux': array([ 5.19990935]),
+ 'max': array([ 1.55964482]),
+ 'maxpos': array([759, 120,   0,   0], dtype=int32),
+ 'maxposf': '12:29:05.890, +02.02.55.731, I, 1.50494e+08Hz',
+ 'mean': array([ 0.00049606]),
+ 'medabsdevmed': array([ 0.0399086]),
+ 'median': array([ -3.57224781e-05]),
+ 'min': array([-0.29694822]),
+ 'minpos': array([759, 323,   0,   0], dtype=int32),
+ 'minposf': '12:29:05.890, +02.03.03.709, I, 1.50494e+08Hz',
+ 'npts': array([ 810000.]),
+ 'q1': array([-0.03989076]),
+ 'q3': array([ 0.03992301]),
+ 'quartile': array([ 0.07981377]),
+ 'rms': array([ 0.06130784]),
+ 'sigma': array([ 0.06130587]),
+ 'sum': array([ 401.80769623]),
+ 'sumsq': array([ 3044.50713954]),
+ 'trc': array([899, 899,   0,   0], dtype=int32),
+ 'trcf': '12:29:05.523, +02.03.26.346, I, 1.50494e+08Hz'}
+'''
 
 gaincal(                                 # determine temporal gains
-    vis         = 'ms.ms',               # my measurement set
+    vis         = 'nov-small.ms',               # my measurement set
     caltable    = 'caltable-l-2',        # name for the calibration table generated
-    uvrange     = '0~200klambda',        # low resolution image
+    #uvrange     = '0~200klambda',        # low resolution image
     gaintype    = 'T',                   # average polarisations
     calmode     = 'p',                   # phase only
     combine     = 'spw',                 # average spectral windows - if source spectral index/morphology changes significantly across the band, do not combine spws, especially for amplitude
     solint      = '30s')                 # want it to be short enough to track changes in the atmospheric phase with high accuracy but long enough to measure phases with good signal-to-noise
+
+''' # calibration solve statistics (spw - expected/attempted/succeeded): spw 0 - 480/416/416 '''
 
 plotcal(                                 # do the phases appear smoothly varying with time as opposed to noise-like?
     caltable    = 'caltable-l-2',        #
@@ -215,28 +249,30 @@ plotcal(                                 # do the phases appear smoothly varying
 # if it improves things a lot, try an even shorter solint
 
 applycal(                                # apply the calibration to the data for next round of imaging
-    vis         = 'ms.ms',               #
+    vis         = 'nov-small.ms',               #
     gaintable   = ['caltable-l-2'])      #
 
 ''' self-calibration round 3 ----------------------------------------------- '''
 
 tclean(                                  # do the cleaning
-    vis         = 'ms.ms',               # changed name I think as was too long a string for AIPS
-    imagename   = '3c273-run3-lowres-3', #
-    uvrange     = '0~200klambda',        # low resolution image
+    vis         = 'nov-small.ms',        # changed name I think as was too long a string for AIPS
+    imagename   = '3c273-run3-lowres-3',   #
+    #uvrange     = '0~200klambda',        # low resolution image - would've made an >80k lambda cut but the CS are tied
     specmode    = 'mfs',                 # multifrequency synthesis mode
     deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
     nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
     gridder     = 'standard',            #
-    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
-    cell        = ['0.1473arcsec'],      # 0.0393arcsec for high res
+    imsize      = [900, 900],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.0393arcsec'],      # 0.0393arcsec for high res
     weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
-    robust      = -1.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
-    threshold   = '0mJy',                # stops when max residual in tclean region < threshold
+    robust      = -2.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
+    threshold   = '10mJy',                # stops when max residual in tclean region < threshold
     niter       = 5000,                  #
     pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
     interactive = True,                  #
     savemodel   = 'modelcolumn')
+
+'''nov; here! issue is there is no bloody core!!!'''
 
 imview(                                            # view the cleaned image
     raster      = '3c273-run3-lowres-3.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
@@ -245,40 +281,43 @@ imstat(
     imagename   = '3c273-run3-lowres-3.image.tt0')
 
 # {'blc': array([0, 0, 0, 0], dtype=int32),
-#  'blcf': '12:29:07.879, +02.02.51.024, I, 1.544e+08Hz',
-#  'flux': array([-77.91278479]),
-#  'max': array([ 1.41481519]),
-#  'maxpos': array([202,  32,   0,   0], dtype=int32),
-#  'maxposf': '12:29:05.894, +02.02.55.738, I, 1.544e+08Hz',
-#  'mean': array([-0.03687202]),
-#  'medabsdevmed': array([ 0.03006466]),
-#  'median': array([-0.03980701]),
-#  'min': array([-0.50950491]),
-#  'minpos': array([199,  17,   0,   0], dtype=int32),
-#  'minposf': '12:29:05.924, +02.02.53.528, I, 1.544e+08Hz',
-#  'npts': array([ 57600.]),
-#  'q1': array([-0.06885893]),
-#  'q3': array([-0.00853507]),
-#  'quartile': array([ 0.06032386]),
-#  'rms': array([ 0.0684131]),
-#  'sigma': array([ 0.05762694]),
-#  'sum': array([-2123.82828518]),
-#  'sumsq': array([ 269.58831972]),
-#  'trc': array([239, 239,   0,   0], dtype=int32),
-#  'trcf': '12:29:05.531, +02.03.26.229, I, 1.544e+08Hz'}
+#  'blcf': '12:29:07.880, +02.02.51.015, I, 1.50494e+08Hz',
+#  'flux': array([ 3.8578088]),
+#  'max': array([ 1.84218645]),
+#  'maxpos': array([759, 120,   0,   0], dtype=int32),
+#  'maxposf': '12:29:05.890, +02.02.55.731, I, 1.50494e+08Hz',
+#  'mean': array([ 0.00036602]),
+#  'medabsdevmed': array([ 0.05933845]),
+#  'median': array([ 0.00012361]),
+#  'min': array([-0.48008484]),
+#  'minpos': array([762, 254,   0,   0], dtype=int32),
+#  'minposf': '12:29:05.882, +02.03.00.997, I, 1.50494e+08Hz',
+#  'npts': array([ 810000.]),
+#  'q1': array([-0.05951405]),
+#  'q3': array([ 0.05916906]),
+#  'quartile': array([ 0.11868311]),
+#  'rms': array([ 0.08851677]),
+#  'sigma': array([ 0.08851606]),
+#  'sum': array([ 296.47601197]),
+#  'sumsq': array([ 6346.52658607]),
+#  'trc': array([899, 899,   0,   0], dtype=int32),
+#  'trcf': '12:29:05.523, +02.03.26.346, I, 1.50494e+08Hz'}
+
 
 # compare previous image with this phase-only self-calibration image
 # compare S/N = (peak Jy/beam)/(rms Jy/beam)
 # if it did not improve, try amplitude self-calibration next
 
 gaincal(                                 # determine temporal gains
-    vis         = 'ms.ms',               # my measurement set
+    vis         = 'nov-small.ms',               # my measurement set
     caltable    = 'caltable-l-3',        # name for the calibration table generated
-    uvrange     = '0~200klambda',        # low resolution image
+    # uvrange     = '0~200klambda',        # low resolution image
     gaintype    = 'T',                   # average polarisations
     calmode     = 'p',                   # phase only
     combine     = 'spw',                 # average spectral windows - if source spectral index/morphology changes significantly across the band, do not combine spws, especially for amplitude
     solint      = '4s')                  # want it to be short enough to track changes in the atmospheric phase with high accuracy but long enough to measure phases with good signal-to-noise
+
+''' # calibration solve statistics (spw - expected/attempted/succeeded): spw 0 - 3600/3092/2977 '''
 
 plotcal(                                 # do the phases appear smoothly varying with time as opposed to noise-like?
     caltable    = 'caltable-l-3',        #
@@ -288,9 +327,27 @@ plotcal(                                 # do the phases appear smoothly varying
     subplot     = 421,                   #
     plotrange   = [0, 0, -180, 180])     #
 
+smoothcal(
+vis          =         'nov-small.ms'  , #  Name of input visibility file
+tablein      =          'caltable-l-3' , #  Input calibration table
+caltable     =         'caltable-l-3-smoo'  , #,  Output calibration table
+#field        =         ''   ,#  Field name list
+smoothtype   =   'median'  , #  Smoothing filter to use
+smoothtime   =       60.0 ,  #  Smoothing time (sec)
+#async        =      False   #  if True run in the background, prompt is freed
+)
+
+plotcal(                                 # do the phases appear smoothly varying with time as opposed to noise-like?
+    caltable    = 'caltable-l-3-smoo',        #
+    xaxis       = 'time',                #
+    yaxis       = 'phase',               #
+    iteration   = 'antenna',             #
+    subplot     = 421,                   #
+    plotrange   = [0, 0, -180, 180])     #
+
 applycal(                                # apply the calibration to the data for next round of imaging
-    vis         = 'ms.ms',               #
-    gaintable   = ['caltable-l-3'])      #
+    vis         = 'nov-small.ms',               #
+    gaintable   = ['caltable-l-3-smoo'])      #
 
 ''' self-calibration round 4 ----------------------------------------------- '''
 
@@ -313,19 +370,21 @@ applycal(                                # apply the calibration to the data for
 #     flaggedsymbolcolor = 'ff0000',
 #     flaggedsymbolfill = 'fill')
 
+'''HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 02 nov 2018'''
+
 tclean(                                  # do the cleaning
-    vis         = 'ms.ms',               # changed name I think as was too long a string for AIPS
-    imagename   = '3c273-run3-lowres-4', #
-    uvrange     = '0~200klambda',        # low resolution image
+    vis         = 'nov-small.ms',        # changed name I think as was too long a string for AIPS
+    imagename   = '3c273-run3-lowres-4',   #
+    #uvrange     = '0~200klambda',        # low resolution image - would've made an >80k lambda cut but the CS are tied
     specmode    = 'mfs',                 # multifrequency synthesis mode
     deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
     nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
     gridder     = 'standard',            #
-    imsize      = [240, 240],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
-    cell        = ['0.1473arcsec'],      # 0.0393arcsec for high res
+    imsize      = [900, 900],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.0393arcsec'],      # 0.0393arcsec for high res
     weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
-    robust      = -1.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
-    threshold   = '0mJy',                # stops when max residual in tclean region < threshold
+    robust      = -2.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
+    threshold   = '10mJy',                # stops when max residual in tclean region < threshold
     niter       = 5000,                  #
     pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
     interactive = True,                  #
@@ -335,13 +394,22 @@ imview(                                            # view the cleaned image
     raster      = '3c273-run3-lowres-4.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
 
 gaincal(                                 # determine temporal gains
-    vis         = 'ms.ms',               # my measurement set
+    vis         = 'nov-small.ms',               # my measurement set
     caltable    = 'caltable-l-4',        # name for the calibration table generated
-    uvrange     = '0~200klambda',        # low resolution image
+    #uvrange     = '0~200klambda',        # low resolution image
     gaintype    = 'T',                   # average polarisations
-    calmode     = 'ap',                  # amplitude and phase
+    calmode     = 'p',                   # phase only
     combine     = 'spw',                 # average spectral windows - if source spectral index/morphology changes significantly across the band, do not combine spws, especially for amplitude
-    solint      = '1200s')               # amplitude varies more slowly than phase and is less constrained so solint are longer
+    solint      = '80s')                 # want it
+
+# gaincal(                                 # determine temporal gains
+#     vis         = 'ms.ms',               # my measurement set
+#     caltable    = 'caltable-l-4',        # name for the calibration table generated
+#     uvrange     = '0~200klambda',        # low resolution image
+#     gaintype    = 'T',                   # average polarisations
+#     calmode     = 'ap',                  # amplitude and phase
+#     combine     = 'spw',                 # average spectral windows - if source spectral index/morphology changes significantly across the band, do not combine spws, especially for amplitude
+#     solint      = '1200s')               # amplitude varies more slowly than phase and is less constrained so solint are longer
 
 plotcal(                                 # do the phases appear smoothly varying with time as opposed to noise-like?
     caltable    = 'caltable-l-4',        #
@@ -354,8 +422,146 @@ plotcal(                                 # do the phases appear smoothly varying
 # make sure mostly good solutions and a smoothly varying pattern
 
 applycal(                                # apply the calibration to the data for next round of imaging
-    vis         = 'ms.ms',               #
+    vis         = 'nov-small.ms',               #
     gaintable   = ['caltable-l-4'])      #
+
+tclean(                                  # do the cleaning
+    vis         = 'nov-small.ms',        # changed name I think as was too long a string for AIPS
+    imagename   = '3c273-run3-lowres-5',   #
+    #uvrange     = '0~200klambda',        # low resolution image - would've made an >80k lambda cut but the CS are tied
+    specmode    = 'mfs',                 # multifrequency synthesis mode
+    deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
+    nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
+    gridder     = 'standard',            #
+    imsize      = [900, 900],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.0393arcsec'],      # 0.0393arcsec for high res
+    weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
+    robust      = -2.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
+    threshold   = '10mJy',                # stops when max residual in tclean region < threshold
+    niter       = 5000,                  #
+    pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
+    interactive = True,                  #
+    savemodel   = 'modelcolumn')
+
+'''here'''
+imview(                                            # view the cleaned image
+    raster      = '3c273-run3-lowres-5.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
+
+gaincal(                                 # determine temporal gains
+    vis         = 'nov-small.ms',               # my measurement set
+    caltable    = 'caltable-l-amp1',        # name for the calibration table generated
+    gaintype    = 'T',                   # average polarisations
+    calmode     = 'ap',                  # amplitude and phase
+    combine     = 'spw',                 # average spectral windows - if source spectral index/morphology changes significantly across the band, do not combine spws, especially for amplitude
+    solint      = '1200s')               # amp
+
+# TELL NB NB NB LEAH that the solutions don't look smooth at less than 2 minutes
+
+plotcal(                                 # do the phases appear smoothly varying with time as opposed to noise-like?
+    caltable    = 'caltable-l-amp1',  #
+    xaxis       = 'time',                #
+    yaxis       = 'phase',               #
+    iteration   = 'antenna',             #
+    subplot     = 421,                   #
+    plotrange   = [0, 0, -180, 180])     #
+
+applycal(                                # apply the calibration to the data for next round of imaging
+    vis         = 'nov-small.ms',               #
+    gaintable   = ['caltable-l-amp1'])
+
+tclean(                                  # do the cleaning
+    vis         = 'nov-small.ms',        # changed name I think as was too long a string for AIPS
+    imagename   = '3c273-ampl1',   #
+    #uvrange     = '0~200klambda',        # low resolution image - would've made an >80k lambda cut but the CS are tied
+    specmode    = 'mfs',                 # multifrequency synthesis mode
+    deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
+    nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
+    gridder     = 'standard',            #
+    imsize      = [900, 900],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.0393arcsec'],      # 0.0393arcsec for high res
+    weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
+    robust      = -2.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
+    threshold   = '10mJy',                # stops when max residual in tclean region < threshold
+    niter       = 5000,                  #
+    pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
+    interactive = True,                  #
+    savemodel   = 'modelcolumn')
+
+imview(                                            # view the cleaned image
+    raster      = '3c273-ampl1.image.tt0') # .t
+
+gaincal(                                 # determine temporal gains
+    vis         = 'nov-small.ms',               # my measurement set
+    caltable    = 'caltable-l-amp2',        # name for the calibration table generated
+    gaintype    = 'T',                   # average polarisations
+    calmode     = 'ap',                  # amplitude and phase
+    combine     = 'spw',                 # average spectral windows - if source spectral index/morphology changes significantly across the band, do not combine spws, especially for amplitude
+    solint      = '1200s')               # amp
+
+applycal(                                # apply the calibration to the data for next round of imaging
+    vis         = 'nov-small.ms',               #
+    gaintable   = ['caltable-l-amp2'])
+
+tclean(                                  # do the cleaning
+    vis         = 'nov-small.ms',        # changed name I think as was too long a string for AIPS
+    imagename   = '3c273-ampl2',   #
+    #uvrange     = '0~200klambda',        # low resolution image - would've made an >80k lambda cut but the CS are tied
+    specmode    = 'mfs',                 # multifrequency synthesis mode
+    deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
+    nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
+    gridder     = 'standard',            #
+    imsize      = [900, 900],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.0393arcsec'],      # 0.0393arcsec for high res
+    weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
+    robust      = -2.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
+    threshold   = '10mJy',                # stops when max residual in tclean region < threshold
+    niter       = 5000,                  #
+    pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
+    interactive = True,                  #
+    savemodel   = 'modelcolumn')
+
+gaincal(                                 # determine temporal gains
+    vis         = 'nov-small.ms',               # my measurement set
+    caltable    = 'caltable-l-amp3',        # name for the calibration table generated
+    gaintype    = 'T',                   # average polarisations
+    calmode     = 'ap',                  # amplitude and phase
+    combine     = 'spw',                 # average spectral windows - if source spectral index/morphology changes significantly across the band, do not combine spws, especially for amplitude
+    solint      = '1200s')
+
+
+applycal(                                # apply the calibration to the data for next round of imaging
+    vis         = 'nov-small.ms',               #
+    gaintable   = ['caltable-l-amp3'])
+
+tclean(                                  # do the cleaning
+    vis         = 'nov-small.ms',        # changed name I think as was too long a string for AIPS
+    imagename   = '3c273-ampl3',   #
+    #uvrange     = '0~200klambda',        # low resolution image - would've made an >80k lambda cut but the CS are tied
+    specmode    = 'mfs',                 # multifrequency synthesis mode
+    deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
+    nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
+    gridder     = 'standard',            #
+    imsize      = [900, 900],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.0393arcsec'],      # 0.0393arcsec for high res
+    weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
+    robust      = -2.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
+    threshold   = '10mJy',                # stops when max residual in tclean region < threshold
+    niter       = 5000,                  #
+    pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
+    interactive = True,                  #
+    savemodel   = 'modelcolumn')
+
+gaincal(                                 # determine temporal gains
+    vis         = 'nov-small.ms',               # my measurement set
+    caltable    = 'caltable-l-amp4',        # name for the calibration table generated
+    gaintype    = 'T',                   # average polarisations
+    calmode     = 'ap',                  # amplitude and phase
+    combine     = 'spw',                 # average spectral windows - if source spectral index/morphology changes significantly across the band, do not combine spws, especially for amplitude
+    solint      = '1200s')
+
+applycal(                                # apply the calibration to the data for next round of imaging
+    vis         = 'nov-small.ms',               #
+    gaintable   = ['caltable-l-amp4'])
 
 ''' evaluate the calibration ----------------------------------------------- '''
 

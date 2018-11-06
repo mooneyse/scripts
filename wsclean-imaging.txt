@@ -1,0 +1,10 @@
+my wd is this:
+/data5/sean/hba/run3/imaging/data/old/copy/small/new/manual
+
+ran this:
+wsclean -j 12 -mem 80 -scale 0.1473asec -channels-out 2 -mgain 0.7 -auto-mask 3 -auto-threshold 0.3 -local-rms -niter 10000 -size 240 240 -weight briggs -1 -minuv-l 200000 -name wsclean-small wsclean-small.ms/
+
+got some images out. next phase is to predict the initial image. this invovles running the same thing with the -predict flag:
+wsclean -predict -j 12 -mem 80 -scale 0.1473asec -channels-out 2 -mgain 0.7 -auto-mask 3 -auto-threshold 0.3 -local-rms -niter 10000 -size 240 240 -weight briggs -1 -minuv-l 200000 -name wsclean-small wsclean-small.ms/
+
+that is finished now.

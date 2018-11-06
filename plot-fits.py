@@ -24,12 +24,12 @@ plt.rcParams['font.family'] = 'serif'
 
 image = aplpy.FITSFigure(fits)
 
-# image.show_grayscale()
-image.show_colorscale(cmap = 'gist_heat')
-image.show_contour(fits, colors = 'white')
-# ra = [187.2740917, 187.2779167]
-# dec = [2.0485000, 2.0525000]
-# image.show_markers(ra, dec, edgecolor = 'None', facecolor = '#16A085', marker = '+', s = 500, alpha = 0.8, linewidth = 2)
+image.show_grayscale()
+#image.show_colorscale(cmap = 'gist_heat')
+#image.show_contour(fits, colors = 'white')
+ra = [187.2740917, 187.2779167]
+dec = [2.0485000, 2.0525000]
+image.show_markers(ra, dec, edgecolor = 'None', facecolor = '#16A085', marker = '+', s = 500, alpha = 0.8, linewidth = 2)
 image.tick_labels.set_font(size = 15)
 image.axis_labels.set_font(size = 15)
 
