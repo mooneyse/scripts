@@ -74,17 +74,17 @@ exportuvfits(
 # when the data outputted from the lb pipeline were concatenated, the corrected data were copied to the data column
 
 tclean(                                  # do the cleaning
-    vis         = 'nov-again.ms',        # changed name I think as was too long a string for AIPS
-    imagename   = '3c273-run3-lowres',   #
+    vis         = 'nov-low.ms',        # changed name I think as was too long a string for AIPS
+    imagename   = 'nov-low',   #
     #uvrange     = '0~200klambda',        # low resolution image - would've made an >80k lambda cut but the CS are tied
     specmode    = 'mfs',                 # multifrequency synthesis mode
     deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
     nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
     gridder     = 'standard',            #
-    imsize      = [2000, 2000],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
-    cell        = ['0.0393arcsec'],      # 0.0393arcsec for high res
+    imsize      = [256, 256],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.2arcsec'],      # 0.0393arcsec for high res
     weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
-    robust      = -2.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
+    robust      = -1.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
     threshold   = '10mJy',                # stops when max residual in tclean region < threshold
     niter       = 5000,                  #
     pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
@@ -120,9 +120,9 @@ tclean(                                  # do the cleaning
 
 imview(                                          # view the cleaned image
     raster      = '3c273-run3-lowres.image.tt0') # .tt0 is the total intensity image, equivalent to .image from standard imaging
-
+# nov-low1.image.tt0 is the image name
 imstat(
-    imagename   = '3c273-run3-lowres.image.tt0')
+    imagename   = 'nov-low1.image.tt0')
 
 '''{'blc': array([0, 0, 0, 0], dtype=int32),
  'blcf': '12:29:07.880, +02.02.51.015, I, 1.50494e+08Hz',
@@ -146,11 +146,37 @@ imstat(
  'sumsq': array([ 1983.95997948]),
  'trc': array([899, 899,   0,   0], dtype=int32),
  'trcf': '12:29:05.523, +02.03.26.346, I, 1.50494e+08Hz'}
+
+nov-low1.image.tt0:
+{'blc': array([0, 0, 0, 0], dtype=int32),
+ 'blcf': '12:29:07.683, +02.02.53.970, I, 1.50494e+08Hz',
+ 'flux': array([ 2.8131768]),
+ 'max': array([ 1.39806247]),
+ 'maxpos': array([182,  12,   0,   0], dtype=int32),
+ 'maxposf': '12:29:05.894, +02.02.55.738, I, 1.50494e+08Hz',
+ 'mean': array([ 0.00043668]),
+ 'medabsdevmed': array([ 0.0327881]),
+ 'median': array([-0.00080849]),
+ 'min': array([-0.31034422]),
+ 'minpos': array([182,  48,   0,   0], dtype=int32),
+ 'minposf': '12:29:05.894, +02.03.01.040, I, 1.50494e+08Hz',
+ 'npts': array([ 40000.]),
+ 'q1': array([-0.0334039]),
+ 'q3': array([ 0.03228198]),
+ 'quartile': array([ 0.06568588]),
+ 'rms': array([ 0.05523182]),
+ 'sigma': array([ 0.05523078]),
+ 'sum': array([ 17.46721508]),
+ 'sumsq': array([ 122.02215124]),
+ 'trc': array([199, 199,   0,   0], dtype=int32),
+ 'trcf': '12:29:05.727, +02.03.23.283, I, 1.50494e+08Hz'}
+
+
 '''
 
 gaincal(                                 # determine temporal gains
-    vis         = 'nov-small.ms',               # my measurement set
-    caltable    = 'caltable-l-1',        # name for the calibration table generated
+    vis         = 'nov-low.ms',               # my measurement set
+    caltable    = 'caltable-low',        # name for the calibration table generated
     #uvrange     = '0~200klambda',        # low resolution image
     gaintype    = 'T',                   # average polarisations
     calmode     = 'p',                   # phase only
@@ -171,10 +197,28 @@ plotcal(                                 # do the phases appear smoothly varying
 '''nov: flagged one point on PL station'''
 
 applycal(                                # apply the calibration to the data for next round of imaging
-    vis         = 'nov-small.ms',               #
-    gaintable   = ['caltable-l-1'])      #
+    vis         = 'nov-low.ms',               #
+    gaintable   = ['caltable-low'])      #
 
 ''' self-calibration round 2 ----------------------------------------------- '''
+
+tclean(                                  # do the cleaning
+    vis         = 'nov-low.ms',        # changed name I think as was too long a string for AIPS
+    imagename   = 'nov-low2',   #
+    #uvrange     = '0~200klambda',        # low resolution image - would've made an >80k lambda cut but the CS are tied
+    specmode    = 'mfs',                 # multifrequency synthesis mode
+    deconvolver = 'mtmfs',               # Multi-term (Multi Scale) Multi-Frequency Synthesis
+    nterms      = 2,                     # 2 is a good starting point for wideband low frequency imaging and if there is a bright source for which a dynamic range of greater than ~100 is desired
+    gridder     = 'standard',            #
+    imsize      = [200, 200],            # number of pixels must be even and factorizable by 2, 3, 5, or 7 to take advantage of internal FFT routines (900 for high res)
+    cell        = ['0.14...arcsec'],      # 0.0393arcsec for high res
+    weighting   = 'briggs',              # Briggs with robust = -2 is uniform, robust = 2 is natural
+    robust      = -1.0,                  # robust = -2 for high resolution, robust = -1 for low resolution
+    threshold   = '10mJy',                # stops when max residual in tclean region < threshold
+    niter       = 5000,                  #
+    pbcor       = True,                  # the output needs to be divided by the primary beam to form an astronomically correct image of the sky
+    interactive = True,                  #
+    savemodel   = 'modelcolumn')
 
 tclean(                                  # do the cleaning
     vis         = 'nov-small.ms',        # changed name I think as was too long a string for AIPS
