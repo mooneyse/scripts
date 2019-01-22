@@ -1,38 +1,65 @@
 #!/usr/bin/env python3
 
-'''
-    Credit: Sean Mooney
-    Usage: ./plot-fits.py fits.fits
-    Detail: Plots a fits file image.
-'''
+'''Plot a FITS file.'''
 
-# complains that no module 'pyqt4' installed so added these lines as a work around
+import aplpy
+import argparse
+import os
+import sys
 import matplotlib as mpl
-mpl.use('Agg') 
-
-import aplpy, os, sys
 import matplotlib.pyplot as plt
 
-try:
-    fits = sys.argv[1]
-except:
-    print('Please supply a fits file.')
-    sys.exit(1)
-    # fits = '/home/sean/Downloads/images/3C273-run3-low-copy.fits'
+__author__ = 'Sean Mooney'
+__date__ = '22 January 2019'
 
-plt.rcParams['font.family'] = 'serif'
+# TODO have a flag to set the format (png or eps)
+# TODO have a flag to plt.show() or not
+# TODO add show_markers functionality
+# TODO add a greyscale or colour flag
 
-image = aplpy.FITSFigure(fits)
+def plot_fits(fits, color=True, cmap='viridis', vmin=0, vmax=12, format='png'):
+    '''Plot a FITS file.'''
 
-image.show_grayscale()
-#image.show_colorscale(cmap = 'gist_heat')
-#image.show_contour(fits, colors = 'white')
-ra = [187.2740917, 187.2779167]
-dec = [2.0485000, 2.0525000]
-image.show_markers(ra, dec, edgecolor = 'None', facecolor = '#16A085', marker = '+', s = 500, alpha = 0.8, linewidth = 2)
-image.tick_labels.set_font(size = 15)
-image.axis_labels.set_font(size = 15)
+    plt.rcParams['font.family'] = 'serif'
+    image = aplpy.FITSFigure(fits)
 
-# plt.show()
-image.save(os.path.splitext(fits)[0] + '.eps', format = 'eps')
-print('All done! The image is at ' + os.path.splitext(fits)[0] + '.eps')
+    if color:
+        image.show_colorscale(cmap=cmap, vmin=vmin, vmax=vmax)
+    else:
+        image.show_grayscale()
+
+    image.show_contour(fits, levels=[4, 8], colors='white')
+    image.recenter(194.2401688, 47.33874257, radius=0.00416667)
+    # ra = [187.2740917, 187.2779167]
+    # dec = [2.0485000, 2.0525000]
+    # image.show_markers(ra, dec, edgecolor='None', facecolor='#16A085',
+    #                    marker='+', s=500, alpha=0.8, linewidth=2)
+    image.tick_labels.set_font(size=15)
+    image.axis_labels.set_font(size=15)
+    # plt.show()
+    image.save(os.path.splitext(fits)[0] + '.' + format, format=format)
+
+    return os.path.splitext(fits)[0] + '.' + format
+
+
+def main():
+    '''Plot a FITS file.'''
+
+    formatter_class = argparse.RawDescriptionHelpFormatter
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=formatter_class)
+
+    parser.add_argument('-f',
+                        '--fits',
+                        required=True,
+                        type=str,
+                        help='FITS file to be plotted.')
+
+    args = parser.parse_args()
+    fits = args.fits
+
+    plot = plot_fits(fits)
+    print('All done! The image is at {}.'.format(plot))
+
+if __name__ == '__main__':
+    main()
