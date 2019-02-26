@@ -30,6 +30,11 @@ def do_plotting(name, frequency, nu_f_nu, savefig, fontsize=16, dpi=96, l=529,
     '''Use Matplotlib to build the plot. DPI found from
     https://www.infobyip.com/detectmonitordpi.php.'''
 
+    frequency_ = frequency[-2]
+    nu_f_nu_ = nu_f_nu[-2]
+    list(frequency).pop(-2) # my_list.pop(-2) drops the second last item in the list
+    list(nu_f_nu).pop(-2)
+
     mpl.rcParams['xtick.direction'] = 'in'
     mpl.rcParams['ytick.direction'] = 'in'
     mpl.rcParams['xtick.top'] = True
@@ -44,10 +49,9 @@ def do_plotting(name, frequency, nu_f_nu, savefig, fontsize=16, dpi=96, l=529,
     mpl.rcParams['ytick.minor.width'] = 2
     mpl.rcParams['axes.linewidth'] = 2
 
-    # plt.figure(figsize=(12, 8))
     plt.figure(figsize=(l / dpi, w / dpi), dpi=dpi)
     plt.loglog(frequency, nu_f_nu, marker='.', ls='None', color='black')
-    plt.plot(frequency[-2], nu_f_nu[-2], marker='.', ls='None', color='red')
+    plt.plot(frequency_, nu_f_nu_, marker='.', ls='None', color='red')
     plt.xlim(1e7, 1e26)
     plt.ylim(1e7, 1e14)
     plt.xlabel(r'$\nu$ (Hz)', fontsize=fontsize)
