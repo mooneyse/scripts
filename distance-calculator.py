@@ -13,8 +13,8 @@ __date__ = '22 January 2019'
 def distance(ra1, dec1, ra2, dec2):
     '''Calculates the distance between two points on the sky.'''
 
-    s1 = SkyCoord(ra1, dec1, frame='fk5')#, unit='deg')
-    s2 = SkyCoord(ra2, dec2, frame='fk5')#, unit='deg')
+    s1 = SkyCoord(ra1, dec1, frame='fk5', unit='deg')
+    s2 = SkyCoord(ra2, dec2, frame='fk5', unit='deg')
 
     return s1.separation(s2)
 
